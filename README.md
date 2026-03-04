@@ -67,6 +67,12 @@ RUST_LOG=debug ./agni-server --config config.example.yml
 Available levels: `error`, `warn`, `info`, `debug`, `trace`.
 If `RUST_LOG` is not set, no logs are emitted.
 
+## Store Design
+
+The in-memory store uses [`DashMap`](https://docs.rs/dashmap) — a sharded concurrent `HashMap` — instead of `Arc<RwLock<HashMap>>`. DashMap splits the keyspace across 64 independent shards, each with its own lock. Under concurrent write workloads this eliminates the single write-lock bottleneck and yields **+28% throughput and -30% p99 latency on SET** compared to a global `RwLock`.
+
+See [BENCHMARK.md](./BENCHMARK.md) for full results.
+
 ## Roadmap
 
 - [ ] Core commands (`GET`, `SET`, `DEL`, `EXISTS`, `EXPIRE`, `TTL`)
