@@ -43,6 +43,24 @@ cargo run -p agni-server -- --config config.example.yml
 cargo run -p agni-client -- PING
 ```
 
+## Docker
+
+```bash
+# Build
+docker build -t agni .
+
+# Run
+docker run -p 6379:6379 agni
+```
+
+To use a custom config, mount it over the default:
+
+```bash
+docker run -p 6379:6379 -v $(pwd)/config.yml:/etc/agni/config.yml agni
+```
+
+> **Note:** the config `host` must be `0.0.0.0` inside the container, not `127.0.0.1`.
+
 ## Using agni as a library
 
 ```toml
