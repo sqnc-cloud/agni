@@ -9,6 +9,7 @@ A Redis-like in-memory cache server written in Rust.
 | `agni` | Core library — store, protocol, config. Publishable to crates.io |
 | `agni-server` | TCP server binary |
 | `agni-client` | CLI client binary |
+| `agni-bench` | Persistent-connection benchmarking binary |
 
 ## Project Structure
 
@@ -24,7 +25,10 @@ agni/
 │   └── src/
 │       ├── main.rs        # Entry point
 │       └── server/        # TCP listener and connection handling
-└── agni-client/           # CLI client binary
+├── agni-client/           # CLI client binary
+│   └── src/
+│       └── main.rs        # Entry point
+└── agni-bench/            # Benchmarking binary
     └── src/
         └── main.rs        # Entry point
 ```
@@ -75,7 +79,8 @@ See [BENCHMARK.md](./BENCHMARK.md) for full results.
 
 ## Roadmap
 
-- [ ] Core commands (`GET`, `SET`, `DEL`, `EXISTS`, `EXPIRE`, `TTL`)
+- [x] Core commands — `PING`, `GET`, `SET`
+- [ ] Remaining commands — `DEL`, `EXISTS`, `EXPIRE`, `TTL`
 - [ ] TTL and background expiry cleanup
 - [ ] Persistence
 - [ ] Additional data types (lists, hashes, sets)
