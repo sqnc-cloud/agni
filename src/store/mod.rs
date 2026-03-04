@@ -18,17 +18,70 @@ impl Store {
     }
 
     pub fn set(&self, key: String, value: Vec<u8>) {
-        let mut data = self.data.write().unwrap();
+        let mut data = self.data.write().unwrap_or_else(|e| e.into_inner());
         data.insert(key.clone(), Entry::new(key, value));
     }
 
     pub fn get(&self, key: &str) -> Option<Vec<u8>> {
-        let data = self.data.read().unwrap();
+        let data = self.data.read().unwrap_or_else(|e| e.into_inner());
         data.get(key).map(|e| e.value.clone())
     }
 
     pub fn delete(&self, key: &str) -> bool {
-        let mut data = self.data.write().unwrap();
+        let mut data = self.data.write().unwrap_or_else(|e| e.into_inner());
         data.remove(key).is_some()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_set_and_get() {
+        let store = Store::new();
+        store.set("name".to_string(), b"agni".to_vec());
+
+        let value = store.get("name");
+        assert_eq!(value, Some(b"agni".to_vec()));
+    }
+
+    #[test]
+    fn test_get_missing_key() {
+        let store = Store::new();
+        assert_eq!(store.get("missing"), None);
+    }
+
+    #[test]
+    fn test_overwrite_value() {
+        let store = Store::new();
+        store.set("key".to_string(), b"first".to_vec());
+        store.set("key".to_string(), b"second".to_vec());
+
+        assert_eq!(store.get("key"), Some(b"second".to_vec()));
+    }
+
+    #[test]
+    fn test_delete_existing_key() {
+        let store = Store::new();
+        store.set("key".to_string(), b"value".to_vec());
+
+        assert!(store.delete("key"));
+        assert_eq!(store.get("key"), None);
+    }
+
+    #[test]
+    fn test_delete_missing_key() {
+        let store = Store::new();
+        assert!(!store.delete("missing"));
+    }
+
+    #[test]
+    fn test_shared_across_clones() {
+        let store = Store::new();
+        let store2 = store.clone();
+
+        store.set("key".to_string(), b"value".to_vec());
+        assert_eq!(store2.get("key"), Some(b"value".to_vec()));
     }
 }
