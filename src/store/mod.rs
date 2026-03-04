@@ -31,6 +31,11 @@ impl Store {
         let mut data = self.data.write().unwrap_or_else(|e| e.into_inner());
         data.remove(key).is_some()
     }
+
+    pub fn get_as_json(&self, key: &str) -> Option<Result<String, serde_json::Error>> {
+        let data = self.data.read().unwrap_or_else(|e| e.into_inner());
+        data.get(key).map(|e| e.to_json())
+    }
 }
 
 #[cfg(test)]
@@ -83,5 +88,25 @@ mod tests {
 
         store.set("key".to_string(), b"value".to_vec());
         assert_eq!(store2.get("key"), Some(b"value".to_vec()));
+    }
+
+    #[test]
+    fn test_get_as_json_contains_key_and_base64_value() {
+        let store = Store::new();
+        store.set("hello".to_string(), b"world".to_vec());
+
+        let json = store.get_as_json("hello").unwrap().unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(parsed["key"], "hello");
+        // "world" in base64 is "d29ybGQ="
+        assert_eq!(parsed["value"], "d29ybGQ=");
+        assert!(parsed["id"].is_string());
+    }
+
+    #[test]
+    fn test_get_as_json_missing_key() {
+        let store = Store::new();
+        assert!(store.get_as_json("missing").is_none());
     }
 }
