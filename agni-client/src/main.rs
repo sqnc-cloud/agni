@@ -16,8 +16,9 @@ struct Cli {
     #[arg(long, default_value_t = 6379)]
     port: u16,
 
-    /// Command to send (e.g. PING)
-    command: String,
+    /// Command and arguments (e.g. PING, GET key, SET key value)
+    #[arg(num_args = 1..)]
+    command: Vec<String>,
 }
 
 #[tokio::main]
@@ -36,8 +37,10 @@ async fn main() {
     let mut framed_read = FramedRead::new(reader, LengthDelimitedCodec::new());
     let mut framed_write = FramedWrite::new(writer, LengthDelimitedCodec::new());
 
+    let frame = cli.command.join(" ");
+
     framed_write
-        .send(Bytes::from(cli.command.into_bytes()))
+        .send(Bytes::from(frame.into_bytes()))
         .await
         .unwrap_or_else(|e| {
             error!("failed to send command: {}", e);
