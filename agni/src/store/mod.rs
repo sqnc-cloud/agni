@@ -2,39 +2,35 @@ mod entry;
 
 pub use entry::Entry;
 
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use dashmap::DashMap;
 
 #[derive(Clone)]
 pub struct Store {
-    data: Arc<RwLock<HashMap<String, Entry>>>,
+    data: Arc<DashMap<String, Entry>>,
 }
 
 impl Store {
     pub fn new() -> Self {
         Self {
-            data: Arc::new(RwLock::new(HashMap::new())),
+            data: Arc::new(DashMap::new()),
         }
     }
 
     pub fn set(&self, key: String, value: Vec<u8>) {
-        let mut data = self.data.write().unwrap_or_else(|e| e.into_inner());
-        data.insert(key.clone(), Entry::new(key, value));
+        self.data.insert(key.clone(), Entry::new(key, value));
     }
 
     pub fn get(&self, key: &str) -> Option<Vec<u8>> {
-        let data = self.data.read().unwrap_or_else(|e| e.into_inner());
-        data.get(key).map(|e| e.value.clone())
+        self.data.get(key).map(|e| e.value.clone())
     }
 
     pub fn delete(&self, key: &str) -> bool {
-        let mut data = self.data.write().unwrap_or_else(|e| e.into_inner());
-        data.remove(key).is_some()
+        self.data.remove(key).is_some()
     }
 
     pub fn get_as_json(&self, key: &str) -> Option<Result<String, serde_json::Error>> {
-        let data = self.data.read().unwrap_or_else(|e| e.into_inner());
-        data.get(key).map(|e| e.to_json())
+        self.data.get(key).map(|e| e.to_json())
     }
 }
 
